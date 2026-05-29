@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>サイコロロールシミュレーター</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 3D効果 */
+    .dice-perspective {
+      perspective: 1000px;
+    }
+    .dice-card {
+      transform-style: preserve-3d;
+      transition: transform 0.1s ease-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-indigo-500 selection:text-white">
+
+  <!-- ヘッダー -->
+  <header class="w-full max-w-4xl mx-auto px-6 py-4 flex justify-between items-center border-b border-slate-800">
+    <div class="flex items-center gap-2">
+      <i class="fa-solid fa-dice text-2xl text-indigo-400"></i>
+      <h1 class="text-xl font-bold tracking-wider">DICE ROLLER</h1>
+    </div>
+    <!-- 設定ボタン -->
+    <button id="settingsBtn" class="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors duration-200 focus:outline-none" aria-label="設定を開く">
+      <i class="fa-solid fa-gear text-xl"></i>
+    </button>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-4xl w-full mx-auto">
+    <!-- サイコロエリア（常に横並びをキープ） -->
+    <div class="grid grid-cols-3 gap-3 sm:gap-8 w-full max-w-3xl justify-items-center mb-12 dice-perspective">
+      
+      <!-- 左：1組 (c1) -->
+      <div class="flex flex-col items-center gap-2 sm:gap-4 w-full">
+        <span class="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-400 bg-slate-800 px-2 sm:px-3 py-1 rounded-full border border-slate-700 text-center truncate max-w-full">GROUP 1 (c1)</span>
+        <div id="diceContainer1" class="w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 border-2 border-indigo-300 dice-card cursor-default">
+          <span id="diceValue1" class="text-3xl sm:text-5xl font-black text-white select-none">1</span>
+        </div>
+      </div>
+
+      <!-- 真ん中：2組 (c2) -->
+      <div class="flex flex-col items-center gap-2 sm:gap-4 w-full">
+        <span class="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-400 bg-slate-800 px-2 sm:px-3 py-1 rounded-full border border-slate-700 text-center truncate max-w-full">GROUP 2 (c2)</span>
+        <div id="diceContainer2" class="w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 border-2 border-indigo-300 dice-card cursor-default">
+          <span id="diceValue2" class="text-3xl sm:text-5xl font-black text-white select-none">1</span>
+        </div>
+      </div>
+
+      <!-- 右：3組 (c3) -->
+      <div class="flex flex-col items-center gap-2 sm:gap-4 w-full">
+        <span class="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-400 bg-slate-800 px-2 sm:px-3 py-1 rounded-full border border-slate-700 text-center truncate max-w-full">GROUP 3 (c3)</span>
+        <div id="diceContainer3" class="w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 border-2 border-indigo-300 dice-card cursor-default">
+          <span id="diceValue3" class="text-3xl sm:text-5xl font-black text-white select-none">1</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ロールボタン -->
+    <div class="flex flex-col items-center gap-3">
+      <button id="rollBtn" class="relative group px-12 py-5 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl font-extrabold text-xl tracking-widest text-white shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:from-indigo-500 hover:to-violet-500 active:scale-95 transition-all duration-150 overflow-hidden">
+        <span class="relative z-10 flex items-center gap-2">
+          <i class="fa-solid fa-play"></i> ROLL
+        </span>
+        <span class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+      </button>
+      <div id="statusText" class="text-xs text-slate-500 h-4">ボタンを押してサイコロを振ろう！</div>
+    </div>
+  </main>
+
+  <!-- フッター -->
+  <footer class="w-full text-center py-4 text-xs text-slate-600 border-t border-slate-800">
+    &copy; 2026 Dice Roller Simulation.
+  </footer>
+
+  <!-- 設定用モーダル -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+      <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center">
+        <h2 class="font-bold text-lg flex items-center gap-2 text-indigo-400">
+          <i class="fa-solid fa-sliders"></i> 設定
+        </h2>
+        <button id="closeSettingsBtn" class="text-slate-400 hover:text-white transition-colors">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <!-- c1 -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">GROUP 1 (c1) 内訳 (カンマ区切り)</label>
+          <input type="text" id="inputC1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 text-sm" placeholder="1,2,3,4,5,6">
+        </div>
+        <!-- c2 -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">GROUP 2 (c2) 内訳 (カンマ区切り)</label>
+          <input type="text" id="inputC2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 text-sm" placeholder="1,2,3,4,5,6">
+        </div>
+        <!-- c3 -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">GROUP 3 (c3) 内訳 (カンマ区切り)</label>
+          <input type="text" id="inputC3" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 text-sm" placeholder="1,2,3,3,3,9">
+        </div>
+        <!-- Speed & Border & Power -->
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1">初期速度(Speed)</label>
+            <input type="number" id="inputSpeed" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white focus:outline-none focus:border-indigo-500 text-xs" min="10" max="500" value="120">
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1">閾値(border)</label>
+            <input type="number" id="inputBorder" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white focus:outline-none focus:border-indigo-500 text-xs" min="1" max="200" value="90">
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1">緩急レベル</label>
+            <input type="number" id="inputPower" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white focus:outline-none focus:border-indigo-500 text-xs" min="1" max="10" value="3">
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4 bg-slate-900/50 border-t border-slate-700 flex justify-end gap-3">
+        <button id="resetDefaultsBtn" class="px-4 py-2 bg-slate-800 text-slate-300 hover:text-white rounded-lg text-sm hover:bg-slate-700 transition-colors">初期値に戻す</button>
+        <button id="saveSettingsBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition-colors">設定を保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 初期設定データ
+    let c1 = [1, 2, 3, 4, 5, 6];
+    let c2 = [1, 2, 3, 4, 5, 6];
+    let c3 = [1, 2, 3, 3, 3, 9];
+    let baseRollSpeed = 120; // ロールの開始速度
+    let rollSpeed = 0;      // 可変スピードカウンター
+    let border = 90;        // スピード分割しきい値
+    let easePower = 3;      // 緩急レベル
+
+    // サイコロのデータをランダムに取得する関数
+    function dice(data = [1, 2, 3, 4, 5, 6]) {
+      return data[Math.floor(Math.random() * data.length)];
+    }
+
+    // DOM要素の取得
+    const rollBtn = document.getElementById('rollBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const resetDefaultsBtn = document.getElementById('resetDefaultsBtn');
+    const statusText = document.getElementById('statusText');
+
+    // 各サイコロの文字要素
+    const diceValue1 = document.getElementById('diceValue1');
+    const diceValue2 = document.getElementById('diceValue2');
+    const diceValue3 = document.getElementById('diceValue3');
+
+    // 各サイコロのコンテナ
+    const containers = [
+      document.getElementById('diceContainer1'),
+      document.getElementById('diceContainer2'),
+      document.getElementById('diceContainer3')
+    ];
+
+    // 各グループの状態データ
+    const diceStates = [
+      { element: diceValue1, container: containers[0], data: () => c1, t: 0, bt: 0 },
+      { element: diceValue2, container: containers[1], data: () => c2, t: 0, bt: 0 },
+      { element: diceValue3, container: containers[2], data: () => c3, t: 0, bt: 0 }
+    ];
+
+    // 設定フォーム要素
+    const inputC1 = document.getElementById('inputC1');
+    const inputC2 = document.getElementById('inputC2');
+    const inputC3 = document.getElementById('inputC3');
+    const inputSpeed = document.getElementById('inputSpeed');
+    const inputBorder = document.getElementById('inputBorder');
+    const inputPower = document.getElementById('inputPower');
+
+    // フォームに現在の設定を同期
+    function syncSettingsToForm() {
+      inputC1.value = c1.join(',');
+      inputC2.value = c2.join(',');
+      inputC3.value = c3.join(',');
+      inputSpeed.value = baseRollSpeed;
+      inputBorder.value = border;
+      inputPower.value = easePower;
+    }
+
+    // 設定の保存
+    function saveSettingsFromForm() {
+      c1 = inputC1.value.split(',').map(item => item.trim()).filter(item => item !== "").map(item => isNaN(item) ? item : Number(item));
+      c2 = inputC2.value.split(',').map(item => item.trim()).filter(item => item !== "").map(item => isNaN(item) ? item : Number(item));
+      c3 = inputC3.value.split(',').map(item => item.trim()).filter(item => item !== "").map(item => isNaN(item) ? item : Number(item));
+      baseRollSpeed = Number(inputSpeed.value) || 120;
+      border = Number(inputBorder.value) || 90;
+      easePower = Number(inputPower.value) || 3;
+
+      resetDiceDisplay();
+    }
+
+    // サイコロの初期表示
+    function resetDiceDisplay() {
+      diceValue1.textContent = c1[0] !== undefined ? c1[0] : '-';
+      diceValue2.textContent = c2[0] !== undefined ? c2[0] : '-';
+      diceValue3.textContent = c3[0] !== undefined ? c3[0] : '-';
+    }
+
+    let isRolling = false;
+
+    // 1tick毎のアニメーション
+    function tick() {
+      // rollSpeedが0以下になったら終了
+      if (rollSpeed < 0) {
+        finishRoll();
+        return;
+      }
+
+      // 各サイコロごとに累積値の更新と判定を行う
+      diceStates.forEach((state, index) => {
+        // サイコロごとに少しだけ乱数要素を乗せて、タイミングに少し揺らぎを与える
+        const individualOffset = 1 + (index * 0.03); 
+        
+        // 修正後の式: t += Math.max(0, Math.pow(rollSpeed / border, easePower))
+        // 個別揺らぎをrollSpeedに掛け合わせた状態で加算
+        state.t += Math.max(0, Math.pow((rollSpeed * individualOffset) / border, easePower));
+
+        // 小数部分が整数値を超えたら出目を更新
+        if (Math.floor(state.t) > Math.floor(state.bt)) {
+          state.element.textContent = dice(state.data());
+
+          // 振動トリガーを「出目変更時」と完全連動！
+          // 高速時は連続で動き続けるので激しく震え、低速時は切り替わった瞬間だけ「カチャッ」と一瞬ブレる
+          const maxAngle = 20; // ブレる最大角度
+          const progressRatio = rollSpeed / baseRollSpeed; // 1.0 -> 0.0（終了に近づくほど小さくなる）
+          const currentAngle = maxAngle * progressRatio;
+
+          const rotX = (Math.random() - 0.5) * currentAngle * 2;
+          const rotY = (Math.random() - 0.5) * currentAngle * 2;
+          const scale = 1 + (Math.random() - 0.5) * 0.1 * progressRatio;
+
+          // 一瞬だけブレさせてすぐ戻るアニメーションを適用
+          state.container.animate([
+            { transform: 'scale(1) rotateX(0deg) rotateY(0deg)' },
+            { transform: `scale(${scale}) rotateX(${rotX}deg) rotateY(${rotY}deg)`, offset: 0.15 },
+            { transform: 'scale(1) rotateX(0deg) rotateY(0deg)' }
+          ], {
+            duration: 90, // 一瞬のブレ感
+            easing: 'ease-out'
+          });
+        }
+
+        state.bt = state.t;
+      });
+
+      rollSpeed--;
+      
+      // 次のフレームへ
+      requestAnimationFrame(tick);
+    }
+
+    // ロール開始
+    function startRoll() {
+      if (isRolling) return;
+      isRolling = true;
+      rollBtn.disabled = true;
+      rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      statusText.textContent = "超高速ローリング中...";
+
+      // すべてのタイマーと累積変数をリセット
+      diceStates.forEach(state => {
+        state.t = 0;
+        state.bt = 0;
+      });
+
+      rollSpeed = baseRollSpeed; // 設定した開始速度にする
+      
+      // ループスタート
+      requestAnimationFrame(tick);
+    }
+
+    // ロール完了（最終確定）
+    function finishRoll() {
+      // 最終結果を完全に確定
+      diceStates.forEach(state => {
+        state.element.textContent = dice(state.data());
+      });
+
+      // ピタッと止まった時の気持ちいい弾む演出
+      containers.forEach(container => {
+        container.animate([
+          { transform: 'scale(1)' },
+          { transform: 'scale(1.25)', offset: 0.15 },
+          { transform: 'scale(0.93)', offset: 0.45 },
+          { transform: 'scale(1.02)', offset: 0.75 },
+          { transform: 'scale(1)' }
+        ], {
+          duration: 450,
+          easing: 'ease-out'
+        });
+      });
+
+      statusText.textContent = "ストップ！結果発表だね！";
+      rollBtn.disabled = false;
+      rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      isRolling = false;
+    }
+
+    // イベントリスナー
+    rollBtn.addEventListener('click', startRoll);
+
+    // モーダル
+    settingsBtn.addEventListener('click', () => {
+      if (isRolling) return;
+      syncSettingsToForm();
+      settingsModal.classList.remove('hidden');
+    });
+
+    closeSettingsBtn.addEventListener('click', () => {
+      settingsModal.classList.add('hidden');
+    });
+
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        settingsModal.classList.add('hidden');
+      }
+    });
+
+    saveSettingsBtn.addEventListener('click', () => {
+      saveSettingsFromForm();
+      settingsModal.classList.add('hidden');
+      statusText.textContent = "設定を保存したよ！";
+    });
+
+    resetDefaultsBtn.addEventListener('click', () => {
+      inputC1.value = "1,2,3,4,5,6";
+      inputC2.value = "1,2,3,4,5,6";
+      inputC3.value = "1,2,3,3,3,9";
+      inputSpeed.value = 120;
+      inputBorder.value = 90;
+      inputPower.value = 3;
+    });
+
+    // 初期起動時のデータ適用
+    syncSettingsToForm();
+    resetDiceDisplay();
+  </script>
+</body>
+</html>
