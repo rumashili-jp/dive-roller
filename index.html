@@ -262,7 +262,7 @@
           <span class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
         </button>
         
-        <!-- ターンリresetボタン -->
+        <!-- ターンリセットボタン -->
         <button id="resetTurnBtn" class="p-4 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-850 rounded-2xl transition-all duration-150 border border-slate-200 shadow-md active:scale-95" title="ターン数を初期化">
           <i class="fa-solid fa-rotate-left text-lg"></i>
         </button>
@@ -328,9 +328,11 @@
           <input type="text" id="inputBgUrl" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 text-sm" placeholder="https://example.com/image.png">
         </div>
 
-        <!-- ON/OFF エフェクト設定スイッチトグル -->
-        <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-750 space-y-3">
+        <!-- ON/OFF エフェクト設定スイッチトグル & 音量スライダー -->
+        <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-750 space-y-4">
           <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest border-b border-slate-750 pb-1.5"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> エフェクト個別設定</h3>
+          
+          <!-- 各個別チェックボックス -->
           <div class="space-y-3">
             <!-- 衝撃波 -->
             <div class="flex items-center justify-between">
@@ -355,6 +357,21 @@
                 <input type="checkbox" id="checkBorderColor" class="sr-only peer" checked>
                 <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
               </label>
+            </div>
+          </div>
+
+          <!-- 音量設定スライダー (追加部分) -->
+          <div class="border-t border-slate-750 pt-3 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-volume-high text-indigo-400"></i> 効果音の音量
+              </span>
+              <span id="volumeValue" class="text-xs font-mono font-bold text-indigo-400">20</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-volume-off text-xs text-slate-500"></i>
+              <input type="range" id="inputVolume" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" min="0" max="100" value="20">
+              <i class="fa-solid fa-volume-high text-xs text-slate-500"></i>
             </div>
           </div>
         </div>
@@ -405,16 +422,108 @@
     let rollSpeed = 0;      // 可変スピードカウンター
     let border = 90;        // スピード分割しきい値
     let easePower = 3;      // 緩急レベル
-    let bgImageUrl = "./bg.jpg";    // 背景画像のURLパス
+    let bgImageUrl = "./bg.jpg";    // 背景画像のURLパス (初期値を "./bg.jpg" に指定)
     
-    // エフェクトのオンオフ設定状態（グローバル変数）
+    // ターン管理のデータ
+    let currentTurn = 1;
+    let eventInterval = 5;  // 5ターンごとにイベント発生
+
+    // 個別のエフェクトON/OFFステート
     let enableShockwave = true;
     let enableAura = true;
     let enableBorderColor = true;
 
-    // ターン管理 of データ
-    let currentTurn = 1;
-    let eventInterval = 5;  // 5ターンごとにイベント発生
+    // 音量管理 (0 ~ 100, 初期値20)
+    let sfxVolume = 20;
+
+    // Web Audio API によるロール音 & 確定音のシミュレート
+    let audioCtx = null;
+
+    // 「カチッ」という短いロール音
+    function playClickSound(index = 0) {
+      try {
+        // 音量が0なら何もしない
+        if (sfxVolume <= 0) return;
+
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        // サイコロのグループごとに少し周波数をズラして、音がダブったときのノイズ感を防ぎつつリアルに
+        const pitchFactor = 1 + (index * 0.12);
+        const baseFreq = 1600 * pitchFactor * (0.95 + Math.random() * 0.1);
+        
+        osc.type = 'triangle'; // 木製・プラスチックのような少し丸みのある心地いいアタック音
+        osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
+        // 急速に周波数を下げて「カチッ」というクリック感を出す
+        osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.025);
+        
+        // 音量エンベロープ（音量スライダーの数値を反映：元の0.04スケールを基準にする）
+        const volumeFactor = sfxVolume / 100;
+        gain.gain.setValueAtTime(0.2 * volumeFactor, audioCtx.currentTime); 
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.025);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.03);
+      } catch (e) {
+        console.debug("Audio play failed:", e);
+      }
+    }
+
+    // 「ピキーン！」「ポン！」という確定音
+    function playConfirmSound(tier = 0) {
+      try {
+        // 音量が0なら何もしない
+        if (sfxVolume <= 0) return;
+
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        const volumeFactor = sfxVolume / 100;
+
+        if (tier === 5) {
+          // レインボー（最大値）はピキーン！と高音できらびやかに上昇
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(700, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(2200, audioCtx.currentTime + 0.12);
+          
+          gain.gain.setValueAtTime(0.4 * volumeFactor, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+        } else {
+          // 通常の確定はポコッ！と小気味よく
+          osc.type = 'triangle';
+          const freq = 380 + (tier * 60); // ティアが高いほど少し高音になる
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.06);
+          
+          gain.gain.setValueAtTime(0.3 * volumeFactor, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.07);
+        }
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25);
+      } catch (e) {
+        console.debug("Audio play failed:", e);
+      }
+    }
 
     // サイコロのデータをランダムに取得する関数
     function dice(data = [1, 2, 3, 4, 5, 6]) {
@@ -505,6 +614,8 @@
     const checkShockwave = document.getElementById('checkShockwave');
     const checkAura = document.getElementById('checkAura');
     const checkBorderColor = document.getElementById('checkBorderColor');
+    const inputVolume = document.getElementById('inputVolume');
+    const volumeValue = document.getElementById('volumeValue');
 
     // フォームに現在の設定を同期
     function syncSettingsToForm() {
@@ -522,7 +633,17 @@
       checkShockwave.checked = enableShockwave;
       checkAura.checked = enableAura;
       checkBorderColor.checked = enableBorderColor;
+
+      // 音量の同期
+      inputVolume.value = sfxVolume;
+      volumeValue.textContent = sfxVolume;
     }
+
+    // 音量スライダー変更時のリアルタイム表示更新
+    inputVolume.addEventListener('input', (e) => {
+      volumeValue.textContent = e.target.value;
+      sfxVolume = Number(e.target.value);
+    });
 
     // ターン数のUI表示を更新する
     function updateTurnDisplay() {
@@ -706,44 +827,40 @@
         }
       }
 
-      // 2. サイコロの縁（ボーダー）と影の適用 (オンの時だけ追加、オフなら標準枠)
+      // 2. 縁の色（影と枠色）の適用 (オンの時だけ適用)
       if (enableBorderColor) {
         if (tier === 0) {
           container.classList.add("border-slate-400", "shadow-[0_0_15px_rgba(148,163,184,0.4)]");
+          valSpan.classList.add("text-slate-500");
         } else if (tier === 1) {
           container.classList.add("border-emerald-500", "shadow-[0_0_15px_rgba(16,185,129,0.4)]");
+          valSpan.classList.add("text-emerald-500");
         } else if (tier === 2) {
           container.classList.add("border-blue-500", "shadow-[0_0_15px_rgba(59,130,246,0.4)]");
+          valSpan.classList.add("text-blue-600");
         } else if (tier === 3) {
           container.classList.add("border-yellow-500", "shadow-[0_0_15px_rgba(234,179,8,0.4)]");
+          valSpan.classList.add("text-yellow-600");
         } else if (tier === 4) {
           container.classList.add("border-red-500", "shadow-[0_0_15px_rgba(239,68,68,0.4)]");
+          valSpan.classList.add("text-red-600");
         } else if (tier === 5) {
           container.classList.add("rainbow-effect");
+          valSpan.classList.add("text-transparent", "bg-clip-text", "bg-gradient-to-br", "from-pink-500", "via-purple-600", "to-blue-600");
         }
       } else {
+        // オフの時はデフォルトのスタイルに戻す
         container.classList.add("border-slate-300");
-      }
-
-      // 文字色の設定 (見やすさのため常に適用される、最大値のみトランスパレントレインボー)
-      if (tier === 0) {
-        valSpan.classList.add("text-slate-500");
-      } else if (tier === 1) {
-        valSpan.classList.add("text-emerald-500");
-      } else if (tier === 2) {
-        valSpan.classList.add("text-blue-600");
-      } else if (tier === 3) {
-        valSpan.classList.add("text-yellow-600");
-      } else if (tier === 4) {
-        valSpan.classList.add("text-red-600");
-      } else if (tier === 5) {
-        valSpan.classList.add("text-transparent", "bg-clip-text", "bg-gradient-to-br", "from-pink-500", "via-purple-600", "to-blue-600");
+        valSpan.classList.add("text-slate-950");
       }
 
       // 3. 衝撃波（ショックウェーブ）エフェクトを発生させる (オンの時だけ追加)
       if (enableShockwave) {
         triggerShockwave(index, tier);
       }
+      
+      // 出目確定時の効果音をトリガー
+      playConfirmSound(tier);
     }
 
     // 設定の保存
@@ -762,6 +879,7 @@
       enableShockwave = checkShockwave.checked;
       enableAura = checkAura.checked;
       enableBorderColor = checkBorderColor.checked;
+      sfxVolume = Number(inputVolume.value);
 
       updateBackground();
       updateTurnDisplay();
@@ -796,16 +914,23 @@
 
       // 各サイコロごとに累積値の更新と判定を行う
       diceStates.forEach((state, index) => {
+        // サイコロごとに少しだけ乱数要素を乗せて、タイミングに少し揺らぎを与える
         const individualOffset = 1 + (index * 0.03); 
+        
+        // 個別揺らぎをrollSpeedに掛け合わせた状態で加算
         state.t += Math.max(0, Math.pow((rollSpeed * individualOffset) / border, easePower));
 
+        // 小数部分が整数値を超えたら出目を更新
         if (Math.floor(state.t) > Math.floor(state.bt)) {
           const currentVal = dice(state.data());
           state.element.textContent = currentVal;
 
-          // 振動トリガー
-          const maxAngle = 20; 
-          const progressRatio = rollSpeed / baseRollSpeed; 
+          // 数字が切り替わったタイミングで心地よいカチッ音を再生！
+          playClickSound(index);
+
+          // 振動トリガーの調整
+          const maxAngle = 20; // ブレる最大角度
+          const progressRatio = rollSpeed / baseRollSpeed; // 1.0 -> 0.0
           const currentAngle = maxAngle * progressRatio;
 
           const rotX = (Math.random() - 0.5) * currentAngle * 2;
@@ -1000,6 +1125,13 @@
       checkShockwave.checked = true;
       checkAura.checked = true;
       checkBorderColor.checked = true;
+      inputVolume.value = 20;
+      volumeValue.textContent = "20";
+
+      enableShockwave = true;
+      enableAura = true;
+      enableBorderColor = true;
+      sfxVolume = 20;
     });
 
     // 初期起動時のデータ適用
