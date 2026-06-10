@@ -167,6 +167,24 @@
       animation: text-impact 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
+    /* クリック待機用：出たまま消えないアニメーション */
+    @keyframes slash-in-persist {
+      0% { transform: translateY(-50%) scaleX(0); opacity: 0; }
+      15% { transform: translateY(-50%) scaleX(1.2); opacity: 1; }
+      100% { transform: translateY(-50%) scaleX(1); opacity: 1; }
+    }
+    @keyframes text-impact-persist {
+      0% { transform: scale(3); opacity: 0; filter: blur(10px); }
+      10% { transform: scale(1); opacity: 1; filter: blur(0px); }
+      100% { transform: scale(1); opacity: 1; filter: blur(0px); }
+    }
+    .animate-slash-persist {
+      animation: slash-in-persist 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .animate-impact-persist {
+      animation: text-impact-persist 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
     .particle {
       position: absolute;
       top: 50%;
@@ -286,6 +304,10 @@
       <div id="eventSubtext" class="text-xs md:text-lg font-bold text-white tracking-[0.2em] mt-1 md:mt-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
         SPECIAL EVENT OCCURRED!
       </div>
+      <!-- 追加：クリック解除モード時のヒントテキスト -->
+      <div id="eventClickHint" class="text-xs md:text-sm font-bold text-yellow-300 tracking-[0.1em] mt-3 animate-pulse drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] hidden">
+        画面をタップして閉じる / Tap to close
+      </div>
     </div>
   </div>
 
@@ -400,6 +422,20 @@
               </label>
             </div>
           </div>
+          <!-- 追加：イベント終了タイミング & タイマー時間設定 -->
+          <div class="grid grid-cols-2 gap-3 border-t border-slate-700/50 pt-2">
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-400 mb-1">終了タイミング</label>
+              <select id="inputEventEndType" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white focus:outline-none focus:border-indigo-500 text-xs">
+                <option value="timer">タイマー</option>
+                <option value="click">クリック/タップ</option>
+              </select>
+            </div>
+            <div id="eventDurationWrapper">
+              <label class="block text-[10px] font-semibold text-slate-400 mb-1">表示時間 (秒)</label>
+              <input type="number" id="inputEventDuration" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white focus:outline-none focus:border-indigo-500 text-xs" min="0.5" step="0.5" value="2.5">
+            </div>
+          </div>
         </div>
 
         <!-- サイコロの配置（幅）設定 -->
@@ -451,12 +487,14 @@
     // ターン管理のデータと追加設定データ
     let currentTurn = 1;
     let eventInterval = 5;  
-    let eventTrigger = "end"; 
-    let resetTurnOnEvent = true; 
+    let eventTrigger = "start"; 
+    let resetTurnOnEvent = false; 
     let diceGap = 160; 
+    let eventEndType = "click"; // "timer" (タイマー) または "click" (クリック/タップ)
+    let eventDuration = 2.5;    // イベントの表示秒数
 
     // 個別のエフェクトON/OFFステート
-    let enableShockwave = true;
+    let enableShockwave = false;
     let enableAura = true;
     let enableBorderColor = true;
 
@@ -624,6 +662,11 @@
     const inputDiceGapNumber = document.getElementById('inputDiceGapNumber');
     const gapValueDisplay = document.getElementById('gapValueDisplay');
 
+    // 追加：新規設定フォームのバインド
+    const inputEventEndType = document.getElementById('inputEventEndType');
+    const inputEventDuration = document.getElementById('inputEventDuration');
+    const eventDurationWrapper = document.getElementById('eventDurationWrapper');
+
     const checkShockwave = document.getElementById('checkShockwave');
     const checkAura = document.getElementById('checkAura');
     const checkBorderColor = document.getElementById('checkBorderColor');
@@ -648,6 +691,17 @@
       inputDiceGapNumber.value = diceGap;
       gapValueDisplay.textContent = diceGap;
 
+      // 新設定の同期と、設定に応じた入力欄のアクティブ切り替え
+      inputEventEndType.value = eventEndType;
+      inputEventDuration.value = eventDuration;
+      if (eventEndType === 'click') {
+        eventDurationWrapper.classList.add('opacity-40', 'pointer-events-none');
+        inputEventDuration.disabled = true;
+      } else {
+        eventDurationWrapper.classList.remove('opacity-40', 'pointer-events-none');
+        inputEventDuration.disabled = false;
+      }
+
       checkShockwave.checked = enableShockwave;
       checkAura.checked = enableAura;
       checkBorderColor.checked = enableBorderColor;
@@ -661,6 +715,17 @@
         diceGrid.style.gap = `${diceGap}px`;
       }
     }
+
+    // 設定モーダル内の表示時間切り替えイベント
+    inputEventEndType.addEventListener('change', (e) => {
+      if (e.target.value === 'click') {
+        eventDurationWrapper.classList.add('opacity-40', 'pointer-events-none');
+        inputEventDuration.disabled = true;
+      } else {
+        eventDurationWrapper.classList.remove('opacity-40', 'pointer-events-none');
+        inputEventDuration.disabled = false;
+      }
+    });
 
     inputVolume.addEventListener('input', (e) => {
       volumeValue.textContent = e.target.value;
@@ -880,6 +945,10 @@
       diceGap = Number(inputDiceGapNumber.value);
       applyDiceGap(); 
 
+      // 新設定の保存
+      eventEndType = inputEventEndType.value;
+      eventDuration = Number(inputEventDuration.value) || 2.5;
+
       enableShockwave = checkShockwave.checked;
       enableAura = checkAura.checked;
       enableBorderColor = checkBorderColor.checked;
@@ -958,9 +1027,8 @@
         rollBtn.disabled = true;
         rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
         
-        triggerEventAnimation();
-        
-        setTimeout(() => {
+        // 終了タイミング設定を反映したアニメーションをトリガー
+        triggerEventAnimation(() => {
           if (resetTurnOnEvent) {
             currentTurn = 1; 
           } else {
@@ -970,7 +1038,7 @@
           rollBtn.disabled = false;
           rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
           isRolling = false;
-        }, 2500);
+        });
         
         return; 
       }
@@ -1017,22 +1085,57 @@
       }
     }
 
-    function triggerEventAnimation() {
+    // 画面中央のイベント発生演出ロジック（コールバック方式に拡張）
+    function triggerEventAnimation(onComplete) {
       eventOverlay.classList.remove('hidden');
       eventOverlay.classList.add('flex');
 
-      eventSlash.classList.add('animate-slash');
-      eventText.classList.add('animate-impact');
+      // クリック/タップ終了モードの場合は、オーレイをクリック可能にしてヒントを表示
+      const clickHint = document.getElementById('eventClickHint');
+      if (eventEndType === "click") {
+        eventOverlay.classList.remove('pointer-events-none');
+        eventOverlay.classList.add('pointer-events-auto', 'cursor-pointer');
+        clickHint.classList.remove('hidden');
+        
+        eventSlash.classList.add('animate-slash-persist');
+        eventText.classList.add('animate-impact-persist');
+      } else {
+        eventOverlay.classList.add('pointer-events-none');
+        eventOverlay.classList.remove('pointer-events-auto', 'cursor-pointer');
+        clickHint.classList.add('hidden');
+
+        eventSlash.classList.add('animate-slash');
+        eventText.classList.add('animate-impact');
+      }
 
       createParticles();
 
-      setTimeout(() => {
+      let hasDismissed = false;
+      const dismiss = () => {
+        if (hasDismissed) return;
+        hasDismissed = true;
+
+        // イベントリスナーを安全に解除
+        eventOverlay.removeEventListener('click', dismiss);
+        eventOverlay.removeEventListener('touchstart', dismiss);
+
         eventOverlay.classList.add('hidden');
         eventOverlay.classList.remove('flex');
-        eventSlash.classList.remove('animate-slash');
-        eventText.classList.remove('animate-impact');
+        eventSlash.classList.remove('animate-slash', 'animate-slash-persist');
+        eventText.classList.remove('animate-impact', 'animate-impact-persist');
         particleContainer.innerHTML = ''; 
-      }, 2500);
+
+        if (onComplete) onComplete();
+      };
+
+      if (eventEndType === "click") {
+        // クリック、またはモバイルのタッチ開始で即反応するように設定
+        eventOverlay.addEventListener('click', dismiss);
+        eventOverlay.addEventListener('touchstart', dismiss, { passive: true });
+      } else {
+        // 設定された表示秒数に基づいてタイマー終了
+        setTimeout(dismiss, eventDuration * 1000);
+      }
     }
 
     function finishRoll() {
@@ -1061,8 +1164,8 @@
 
       if (eventTrigger === "end" && isEventTurn) {
         setTimeout(() => {
-          triggerEventAnimation();
-          setTimeout(() => {
+          // 終了タイミング設定を反映したアニメーションをトリガー
+          triggerEventAnimation(() => {
             if (resetTurnOnEvent) {
               currentTurn = 1; 
             } else {
@@ -1072,7 +1175,7 @@
             rollBtn.disabled = false;
             rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             isRolling = false;
-          }, 2500);
+          });
         }, 300); 
       } else {
         currentTurn++;
@@ -1155,13 +1258,21 @@
       inputDiceGapNumber.value = 160;
       gapValueDisplay.textContent = 160;
 
+      // 新規設定のデフォルト初期化
+      inputEventEndType.value = "timer";
+      inputEventDuration.value = 2.5;
+      eventDurationWrapper.classList.remove('opacity-40', 'pointer-events-none');
+      inputEventDuration.disabled = false;
+      eventEndType = "timer";
+      eventDuration = 2.5;
+
       checkShockwave.checked = true;
       checkAura.checked = true;
       checkBorderColor.checked = true;
       inputVolume.value = 20;
       volumeValue.textContent = "20";
 
-      enableShockwave = false;
+      enableShockwave = true;
       enableAura = true;
       enableBorderColor = true;
       sfxVolume = 20;
