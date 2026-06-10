@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="overflow-x-hidden">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <style>
+    /* 横スクロール（謎の余白）を完全に防ぐための設定 */
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
     /* 3D効果 */
     .dice-perspective {
       perspective: 1000px;
@@ -45,7 +51,7 @@
       animation: rotate-gradient 4s linear infinite;
     }
 
-    /* 衝撃波（ショックウェーブ）のアニメーション - より広く、等速で一気に突き抜けて消える仕様に調整 */
+    /* 衝撃波（ショックウェーブ）のアニメーション */
     @keyframes shockwave-expand {
       0% {
         transform: translate(-50%, -50%) scale(0.5);
@@ -54,10 +60,10 @@
         filter: blur(0px);
       }
       100% {
-        transform: translate(-50%, -50%) scale(6.0); /* さらに広範囲（4.5から6.0）まで突き抜けるように拡大 */
+        transform: translate(-50%, -50%) scale(6.0);
         opacity: 0;
         border-width: 0.5px;
-        filter: blur(6px); /* 外側で優しく霧散するぼかし */
+        filter: blur(6px);
       }
     }
     .shockwave {
@@ -67,18 +73,17 @@
       width: 100%;
       height: 100%;
       border-style: solid;
-      border-radius: 1.5rem; /* rounded-2xlに対応 */
+      border-radius: 1.5rem;
       pointer-events: none;
       z-index: 10;
       transform: translate(-50%, -50%) scale(0.5);
       opacity: 0;
     }
     .animate-shockwave {
-      /* イージングを直線（linear）にすることで、途中で減速して止まる感じを排除！ */
       animation: shockwave-expand 0.8s linear forwards;
     }
 
-    /* 各カラーの衝撃波リングを優しく透明感のある色合いに調整（色が濃すぎるバグを修正） */
+    /* 各カラーの衝撃波リング */
     .shockwave-slate {
       border-color: rgba(148, 163, 184, 0.4);
       box-shadow: 0 0 20px rgba(148, 163, 184, 0.2);
@@ -100,7 +105,7 @@
       box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
     }
 
-    /* レインボー衝撃波：発光度合いを大幅にパワーアップして、超強力な炸裂感へ強化 */
+    /* レインボー衝撃波 */
     @keyframes rainbow-shockwave-border {
       0% { 
         border-color: rgba(236, 72, 153, 0.95); 
@@ -124,11 +129,9 @@
       }
     }
     .shockwave-rainbow {
-      /* 中心部にほんのり放射状グラデーションを敷き、広がる光に密度をプラス */
       background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
     }
 
-    /* 虹色の衝撃波用：拡大スピードを少しだけ早めて(0.8s -> 0.7s)炸裂の勢いを強化！ */
     .animate-shockwave.shockwave-rainbow {
       animation: shockwave-expand 0.7s linear forwards, rainbow-shockwave-border 0.7s linear infinite;
     }
@@ -178,7 +181,7 @@
     }
   </style>
 </head>
-<body class="bg-white text-slate-900 min-h-screen flex flex-col justify-between font-sans selection:bg-slate-800 selection:text-white transition-colors duration-300 overflow-x-hidden">
+<body class="bg-white text-slate-900 min-h-screen flex flex-col justify-between font-sans selection:bg-slate-800 selection:text-white transition-colors duration-300 overflow-x-hidden w-full relative">
 
   <!-- ヘッダー -->
   <header class="w-full max-w-4xl mx-auto px-6 py-4 flex justify-between items-center border-b border-slate-200 transition-colors duration-300">
@@ -200,20 +203,17 @@
   </header>
 
   <!-- メインコンテンツ -->
-  <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-4xl w-full mx-auto relative">
+  <main class="flex-grow flex flex-col items-center justify-center p-4 w-full relative">
     
-    <!-- サイコロエリア（常に横並びをキープ） id="diceGrid" を追加 -->
-    <div id="diceGrid" class="grid grid-cols-3 gap-40 sm:gap-72 w-full max-w-3xl justify-items-center mb-12 dice-perspective">
+    <!-- サイコロエリア -->
+    <div id="diceGrid" class="flex flex-row gap-4 sm:gap-8 justify-center items-center w-full max-w-full mb-12 dice-perspective">
       
       <!-- 左：1組 (c1) -->
-      <div class="flex flex-col items-center gap-2 sm:gap-4 w-full">
-        <span class="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-500 bg-slate-100/80 px-2 sm:px-3 py-1 rounded-full border border-slate-200 text-center truncate max-w-full">GROUP 1 (c1)</span>
+      <div class="flex flex-col items-center gap-2 sm:gap-4 flex-1 max-w-[200px]">
+        <span class="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-500 bg-slate-100/80 px-2 sm:px-3 py-1 rounded-full border border-slate-200 text-center truncate w-full">GROUP 1 (c1)</span>
         <div id="diceWrapper1" class="relative">
-          <!-- サイコロの背景オーラ -->
           <div id="diceAura1" class="absolute -inset-1.5 rounded-2xl opacity-0 blur-md transition-all duration-150"></div>
-          <!-- 衝撃波用コンテナ -->
           <div id="diceShockwave1" class="shockwave"></div>
-          <!-- サイコロカード本体 -->
           <div id="diceContainer1" class="relative w-20 h-20 sm:w-28 sm:h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg border-2 border-slate-300 dice-card cursor-default transition-all duration-150">
             <span id="diceValue1" class="text-3xl sm:text-5xl font-black text-slate-950 select-none transition-all duration-150">1</span>
           </div>
@@ -221,14 +221,11 @@
       </div>
 
       <!-- 真ん中：2組 (c2) -->
-      <div class="flex flex-col items-center gap-2 sm:gap-4 w-full">
-        <span class="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-500 bg-slate-100/80 px-2 sm:px-3 py-1 rounded-full border border-slate-200 text-center truncate max-w-full">GROUP 2 (c2)</span>
+      <div class="flex flex-col items-center gap-2 sm:gap-4 flex-1 max-w-[200px]">
+        <span class="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-500 bg-slate-100/80 px-2 sm:px-3 py-1 rounded-full border border-slate-200 text-center truncate w-full">GROUP 2 (c2)</span>
         <div id="diceWrapper2" class="relative">
-          <!-- サイコロの背景オーラ -->
           <div id="diceAura2" class="absolute -inset-1.5 rounded-2xl opacity-0 blur-md transition-all duration-150"></div>
-          <!-- 衝撃波用コンテナ -->
           <div id="diceShockwave2" class="shockwave"></div>
-          <!-- サイコロカード本体 -->
           <div id="diceContainer2" class="relative w-20 h-20 sm:w-28 sm:h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg border-2 border-slate-300 dice-card cursor-default transition-all duration-150">
             <span id="diceValue2" class="text-3xl sm:text-5xl font-black text-slate-950 select-none transition-all duration-150">1</span>
           </div>
@@ -236,14 +233,11 @@
       </div>
 
       <!-- 右：3組 (c3) -->
-      <div class="flex flex-col items-center gap-2 sm:gap-4 w-full">
-        <span class="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-500 bg-slate-100/80 px-2 sm:px-3 py-1 rounded-full border border-slate-200 text-center truncate max-w-full">GROUP 3 (c3)</span>
+      <div class="flex flex-col items-center gap-2 sm:gap-4 flex-1 max-w-[200px]">
+        <span class="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-500 bg-slate-100/80 px-2 sm:px-3 py-1 rounded-full border border-slate-200 text-center truncate w-full">GROUP 3 (c3)</span>
         <div id="diceWrapper3" class="relative">
-          <!-- サイコロの背景オーラ -->
           <div id="diceAura3" class="absolute -inset-1.5 rounded-2xl opacity-0 blur-md transition-all duration-150"></div>
-          <!-- 衝撃波用コンテナ -->
           <div id="diceShockwave3" class="shockwave"></div>
-          <!-- サイコロカード本体 -->
           <div id="diceContainer3" class="relative w-20 h-20 sm:w-28 sm:h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg border-2 border-slate-300 dice-card cursor-default transition-all duration-150">
             <span id="diceValue3" class="text-3xl sm:text-5xl font-black text-slate-950 select-none transition-all duration-150">1</span>
           </div>
@@ -279,7 +273,7 @@
   <!-- イベント発生エフェクトオーバーレイ (VALO / Splatoon風) -->
   <div id="eventOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-40 pointer-events-none">
     <!-- 斜めのスリット背景 -->
-    <div id="eventSlash" class="absolute left-0 right-0 h-32 md:h-40 bg-gradient-to-r from-red-600 via-amber-500 to-yellow-500 -skew-y-3 shadow-[0_0_50px_rgba(234,179,8,0.5)] flex items-center justify-center opacity-0 top-1/2">
+    <div id="eventSlash" class="absolute left-0 right-0 h-32 md:h-40 bg-gradient-to-r from-red-600 via-amber-500 to-yellow-500 -skew-y-3 shadow-[0_0_50px_rgba(234,179,8,0.5)] flex items-center justify-center opacity-0 top-1/2 overflow-hidden">
       <!-- パーティクルコンテナ -->
       <div id="particleContainer" class="absolute inset-0 overflow-hidden"></div>
     </div>
@@ -389,7 +383,6 @@
               <input type="number" id="inputEventInterval" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white focus:outline-none focus:border-indigo-500 text-xs" min="1" value="5">
             </div>
           </div>
-          <!-- 追加：イベントトリガーとターンリセット -->
           <div class="grid grid-cols-2 gap-3 border-t border-slate-700/50 pt-2">
             <div>
               <label class="block text-[10px] font-semibold text-slate-400 mb-1">イベント発生トリガー</label>
@@ -409,7 +402,7 @@
           </div>
         </div>
 
-        <!-- 追加：サイコロの配置（幅）設定 -->
+        <!-- サイコロの配置（幅）設定 -->
         <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-750 space-y-3">
           <div class="flex justify-between items-center border-b border-slate-750 pb-1.5">
             <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest"><i class="fa-solid fa-arrows-left-right text-indigo-400"></i> サイコロの幅（間隔）</h3>
@@ -449,18 +442,18 @@
     let c1 = [1, 2, 3, 4, 5, 6];
     let c2 = [1, 2, 3, 4, 5, 6];
     let c3 = [1, 2, 3, 3, 3, 9];
-    let baseRollSpeed = 120; // ロールの開始速度
-    let rollSpeed = 0;      // 可変スピードカウンター
-    let border = 90;        // スピード分割しきい値
-    let easePower = 3;      // 緩急レベル
-    let bgImageUrl = "./IMG_3640.png";    // 背景画像のURLパス (初期値を "./IMG_3640.png" に指定)
+    let baseRollSpeed = 120;
+    let rollSpeed = 0;      
+    let border = 90;        
+    let easePower = 3;      
+    let bgImageUrl = "./IMG_3640.png";    
     
     // ターン管理のデータと追加設定データ
     let currentTurn = 1;
-    let eventInterval = 5;  // 5ターンごとにイベント発生
-    let eventTrigger = "end"; // "end" または "start"
-    let resetTurnOnEvent = true; // イベント発生時のターンリセット有無
-    let diceGap = 160; // 初期サイコロ間隔（Tailwindのgap-40相当）
+    let eventInterval = 5;  
+    let eventTrigger = "end"; 
+    let resetTurnOnEvent = true; 
+    let diceGap = 160; 
 
     // 個別のエフェクトON/OFFステート
     let enableShockwave = true;
@@ -470,13 +463,11 @@
     // 音量管理 (0 ~ 100, 初期値20)
     let sfxVolume = 20;
 
-    // Web Audio API によるロール音 & 確定音のシミュレート
+    // Web Audio API
     let audioCtx = null;
 
-    // 「カチッ」という短いロール音
     function playClickSound(index = 0) {
       try {
-        // 音量が0なら何もしない
         if (sfxVolume <= 0) return;
 
         if (!audioCtx) {
@@ -492,16 +483,13 @@
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         
-        // サイコロのグループごとに少し周波数をズラして、音がダブったときのノイズ感を防ぎつつリアルに
         const pitchFactor = 1 + (index * 0.12);
         const baseFreq = 1600 * pitchFactor * (0.95 + Math.random() * 0.1);
         
-        osc.type = 'triangle'; // 木製・プラスチックのような少し丸みのある心地いいアタック音
+        osc.type = 'triangle';
         osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
-        // 急速に周波数を下げて「カチッ」というクリック感を出す
         osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.025);
         
-        // 音量エンベロープ（音量スライダーの数値を反映：元の0.04スケールを基準にする）
         const volumeFactor = sfxVolume / 100;
         gain.gain.setValueAtTime(0.2 * volumeFactor, audioCtx.currentTime); 
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.025);
@@ -513,10 +501,8 @@
       }
     }
 
-    // 「ピキーン！」「ポン！」という確定音
     function playConfirmSound(tier = 0) {
       try {
-        // 音量が0なら何もしない
         if (sfxVolume <= 0) return;
 
         if (!audioCtx) {
@@ -534,7 +520,6 @@
         const volumeFactor = sfxVolume / 100;
 
         if (tier === 5) {
-          // レインボー（最大値）はピキーン！と高音できらびやかに上昇
           osc.type = 'sine';
           osc.frequency.setValueAtTime(700, audioCtx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(2200, audioCtx.currentTime + 0.12);
@@ -542,9 +527,8 @@
           gain.gain.setValueAtTime(0.4 * volumeFactor, audioCtx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
         } else {
-          // 通常の確定はポコッ！と小気味よく
           osc.type = 'triangle';
-          const freq = 380 + (tier * 60); // ティアが高いほど少し高音になる
+          const freq = 380 + (tier * 60);
           osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.06);
           
@@ -559,12 +543,10 @@
       }
     }
 
-    // サイコロのデータをランダムに取得する関数
     function dice(data = [1, 2, 3, 4, 5, 6]) {
       return data[Math.floor(Math.random() * data.length)];
     }
 
-    // 入力テキストを解析して配列を生成する関数（通常カンマ区切りと、開始~終了の範囲指定に対応）
     function parseDiceInput(value) {
       const parts = value.split(',');
       let result = [];
@@ -572,7 +554,6 @@
       parts.forEach(part => {
         const trimmed = part.trim();
         if (trimmed.includes('~')) {
-          // チルダ「~」が含まれている場合は範囲展開
           const range = trimmed.split('~');
           if (range.length === 2) {
             const start = Number(range[0].trim());
@@ -586,18 +567,15 @@
             }
           }
         } else {
-          // 通常の単一値
           if (trimmed !== "") {
             result.push(isNaN(trimmed) ? trimmed : Number(trimmed));
           }
         }
       });
       
-      // 空っぽの配列にならないようにフォールバック
       return result.length > 0 ? result : [1];
     }
 
-    // DOM要素の取得
     const rollBtn = document.getElementById('rollBtn');
     const resetTurnBtn = document.getElementById('resetTurnBtn');
     const settingsBtn = document.getElementById('settingsBtn');
@@ -608,33 +586,28 @@
     const statusText = document.getElementById('statusText');
     const turnCounter = document.getElementById('turnCounter');
 
-    // イベント演出関連
     const eventOverlay = document.getElementById('eventOverlay');
     const eventSlash = document.getElementById('eventSlash');
     const eventText = document.getElementById('eventText');
     const particleContainer = document.getElementById('particleContainer');
 
-    // 各サイコロの文字要素
     const diceValue1 = document.getElementById('diceValue1');
     const diceValue2 = document.getElementById('diceValue2');
     const diceValue3 = document.getElementById('diceValue3');
 
-    // 各サイコロのコンテナ
     const containers = [
       document.getElementById('diceContainer1'),
       document.getElementById('diceContainer2'),
       document.getElementById('diceContainer3')
     ];
 
-    // 各グループの状態データ
     const diceStates = [
       { element: diceValue1, container: containers[0], data: () => c1, t: 0, bt: 0 },
       { element: diceValue2, container: containers[1], data: () => c2, t: 0, bt: 0 },
       { element: diceValue3, container: containers[2], data: () => c3, t: 0, bt: 0 }
     ];
 
-    // 設定フォーム要素
-    const diceGrid = document.getElementById('diceGrid'); // 追加
+    const diceGrid = document.getElementById('diceGrid');
     const inputC1 = document.getElementById('inputC1');
     const inputC2 = document.getElementById('inputC2');
     const inputC3 = document.getElementById('inputC3');
@@ -644,21 +617,19 @@
     const inputPower = document.getElementById('inputPower');
     const inputTurn = document.getElementById('inputTurn');
     const inputEventInterval = document.getElementById('inputEventInterval');
-    const inputEventTrigger = document.getElementById('inputEventTrigger'); // 追加
-    const checkResetTurnOnEvent = document.getElementById('checkResetTurnOnEvent'); // 追加
-    const textResetTurnOnEvent = document.getElementById('textResetTurnOnEvent'); // 追加
-    const inputDiceGapRange = document.getElementById('inputDiceGapRange'); // 追加
-    const inputDiceGapNumber = document.getElementById('inputDiceGapNumber'); // 追加
-    const gapValueDisplay = document.getElementById('gapValueDisplay'); // 追加
+    const inputEventTrigger = document.getElementById('inputEventTrigger');
+    const checkResetTurnOnEvent = document.getElementById('checkResetTurnOnEvent');
+    const textResetTurnOnEvent = document.getElementById('textResetTurnOnEvent');
+    const inputDiceGapRange = document.getElementById('inputDiceGapRange');
+    const inputDiceGapNumber = document.getElementById('inputDiceGapNumber');
+    const gapValueDisplay = document.getElementById('gapValueDisplay');
 
-    // エフェクト設定要素
     const checkShockwave = document.getElementById('checkShockwave');
     const checkAura = document.getElementById('checkAura');
     const checkBorderColor = document.getElementById('checkBorderColor');
     const inputVolume = document.getElementById('inputVolume');
     const volumeValue = document.getElementById('volumeValue');
 
-    // フォームに現在の設定を同期
     function syncSettingsToForm() {
       inputC1.value = c1.join(',');
       inputC2.value = c2.join(',');
@@ -670,7 +641,6 @@
       inputTurn.value = currentTurn;
       inputEventInterval.value = eventInterval;
       
-      // 追加設定の同期
       inputEventTrigger.value = eventTrigger;
       checkResetTurnOnEvent.checked = resetTurnOnEvent;
       textResetTurnOnEvent.textContent = resetTurnOnEvent ? "有効" : "無効";
@@ -678,35 +648,29 @@
       inputDiceGapNumber.value = diceGap;
       gapValueDisplay.textContent = diceGap;
 
-      // チェックボックス状態の同期
       checkShockwave.checked = enableShockwave;
       checkAura.checked = enableAura;
       checkBorderColor.checked = enableBorderColor;
 
-      // 音量の同期
       inputVolume.value = sfxVolume;
       volumeValue.textContent = sfxVolume;
     }
 
-    // サイコロの幅（間隔）を適用する関数
     function applyDiceGap() {
       if (diceGrid) {
         diceGrid.style.gap = `${diceGap}px`;
       }
     }
 
-    // 音量スライダー変更時のリアルタイム表示更新
     inputVolume.addEventListener('input', (e) => {
       volumeValue.textContent = e.target.value;
       sfxVolume = Number(e.target.value);
     });
 
-    // ターン数のUI表示を更新する
     function updateTurnDisplay() {
       turnCounter.textContent = currentTurn;
     }
 
-    // 背景画像の設定状況に応じて外観を切り替える関数
     function updateBackground() {
       const header = document.querySelector('header');
       const headerIcon = document.getElementById('headerIcon');
@@ -716,14 +680,12 @@
       const turnContainer = turnCounter.parentElement;
 
       if (bgImageUrl && bgImageUrl.trim() !== "") {
-        // 画像あり：アスペクト比維持(contain)・余白黒埋め
         document.body.style.backgroundColor = "#000000";
         document.body.style.backgroundImage = `url('${bgImageUrl}')`;
         document.body.style.backgroundSize = "contain";
         document.body.style.backgroundPosition = "top center";
         document.body.style.backgroundRepeat = "no-repeat";
 
-        // テキスト色を白に反転
         document.body.classList.remove('text-slate-900');
         document.body.classList.add('text-slate-100');
 
@@ -748,11 +710,9 @@
         footer.classList.remove('border-slate-200', 'text-slate-500');
         footer.classList.add('border-slate-800', 'text-slate-400');
       } else {
-        // 画像なし：シンプルな白背景
         document.body.style.backgroundColor = "#ffffff";
         document.body.style.backgroundImage = "none";
 
-        // テキスト色を黒に戻す
         document.body.classList.remove('text-slate-100');
         document.body.classList.add('text-slate-900');
 
@@ -779,29 +739,24 @@
       }
     }
 
-    // 単一サイコロのエフェクトをシンプルにリセットする関数 (ロール中用)
     function resetSingleDiceEffect(index) {
       const aura = document.getElementById(`diceAura${index + 1}`);
       const container = containers[index];
       const valSpan = diceStates[index].element;
       const shockwave = document.getElementById(`diceShockwave${index + 1}`);
 
-      // オーラを非表示にし、標準のボーダーと標準の暗いテキスト色に戻す
       aura.className = "absolute -inset-1.5 rounded-2xl opacity-0 blur-md transition-all duration-150 pointer-events-none";
       container.className = "relative w-20 h-20 sm:w-28 sm:h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg border-2 border-slate-300 dice-card cursor-default transition-all duration-150";
       valSpan.className = "text-3xl sm:text-5xl font-black text-slate-950 select-none transition-all duration-150";
       
-      // 衝撃波エフェクトのアニメーション削除
       shockwave.className = "shockwave";
     }
 
-    // 衝撃波エフェクト（ショックウェーブ）を発生させる関数
     function triggerShockwave(index, tier) {
       const shockwave = document.getElementById(`diceShockwave${index + 1}`);
       
-      // アニメーションを一度クリア
       shockwave.className = "shockwave";
-      void shockwave.offsetWidth; // リフローを起こしてアニメーションをリセット
+      void shockwave.offsetWidth; 
 
       let colorClass = "";
       
@@ -822,13 +777,11 @@
       shockwave.className = `shockwave animate-shockwave ${colorClass}`;
     }
 
-    // サイコロの出目からティアを判定し、エフェクトを適用する関数 (確定用)
     function applyDiceEffect(index, value, pool) {
       const aura = document.getElementById(`diceAura${index + 1}`);
       const container = containers[index];
       const valSpan = diceStates[index].element;
       
-      // 内訳データから数値のみを取り出す
       const numericPool = pool.map(Number).filter(n => !isNaN(n));
       if (numericPool.length === 0) return;
       
@@ -841,32 +794,28 @@
       if (isNaN(v)) {
         tier = 0;
       } else if (minVal === maxVal) {
-        // 全て同じ値の場合は最大扱い(虹色)
         tier = 5;
       } else if (v === minVal) {
-        tier = 0; // 灰
+        tier = 0; 
       } else if (v === maxVal) {
-        tier = 5; // 虹
+        tier = 5; 
       } else {
-        // 中間のパーセンテージで 1(緑), 2(青), 3(黄), 4(赤) にマッピング
         const pct = (v - minVal) / (maxVal - minVal);
         if (pct <= 0.25) {
-          tier = 1; // 緑
+          tier = 1; 
         } else if (pct <= 0.5) {
-          tier = 2; // 青
+          tier = 2; 
         } else if (pct <= 0.75) {
-          tier = 3; // 黄
+          tier = 3; 
         } else {
-          tier = 4; // 赤
+          tier = 4; 
         }
       }
 
-      // クラスのリセット
       aura.className = "absolute -inset-1.5 rounded-2xl opacity-0 blur-md transition-all duration-150 pointer-events-none";
       container.className = "relative w-20 h-20 sm:w-28 sm:h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg border-2 dice-card cursor-default transition-all duration-150";
       valSpan.className = "text-3xl sm:text-5xl font-black select-none transition-all duration-150";
 
-      // 1. 後ろのオーラの適用 (オンの時だけ追加)
       if (enableAura) {
         if (tier === 0) {
           aura.classList.add("bg-slate-400/50", "opacity-50", "blur-sm");
@@ -883,7 +832,6 @@
         }
       }
 
-      // 2. 縁の色（影と枠色）の適用 (オンの時だけ適用)
       if (enableBorderColor) {
         if (tier === 0) {
           container.classList.add("border-slate-400", "shadow-[0_0_15px_rgba(148,163,184,0.4)]");
@@ -905,21 +853,17 @@
           valSpan.classList.add("text-transparent", "bg-clip-text", "bg-gradient-to-br", "from-pink-500", "via-purple-600", "to-blue-600");
         }
       } else {
-        // オフの時はデフォルトのスタイルに戻す
         container.classList.add("border-slate-300");
         valSpan.classList.add("text-slate-950");
       }
 
-      // 3. 衝撃波（ショックウェーブ）エフェクトを発生させる (オンの時だけ追加)
       if (enableShockwave) {
         triggerShockwave(index, tier);
       }
       
-      // 出目確定時の効果音をトリガー
       playConfirmSound(tier);
     }
 
-    // 設定の保存
     function saveSettingsFromForm() {
       c1 = parseDiceInput(inputC1.value);
       c2 = parseDiceInput(inputC2.value);
@@ -931,13 +875,11 @@
       currentTurn = Number(inputTurn.value) || 1;
       eventInterval = Number(inputEventInterval.value) || 5;
 
-      // 追加設定の保存
       eventTrigger = inputEventTrigger.value;
       resetTurnOnEvent = checkResetTurnOnEvent.checked;
       diceGap = Number(inputDiceGapNumber.value);
-      applyDiceGap(); // ギャップを即時適用
+      applyDiceGap(); 
 
-      // エフェクト設定の取得
       enableShockwave = checkShockwave.checked;
       enableAura = checkAura.checked;
       enableBorderColor = checkBorderColor.checked;
@@ -948,7 +890,6 @@
       resetDiceDisplay();
     }
 
-    // サイコロの初期表示
     function resetDiceDisplay() {
       const val1 = c1[0] !== undefined ? c1[0] : '-';
       const val2 = c2[0] !== undefined ? c2[0] : '-';
@@ -958,7 +899,6 @@
       diceValue2.textContent = val2;
       diceValue3.textContent = val3;
 
-      // 初期値に基づいたエフェクト適用
       applyDiceEffect(0, val1, c1);
       applyDiceEffect(1, val2, c2);
       applyDiceEffect(2, val3, c3);
@@ -966,33 +906,25 @@
 
     let isRolling = false;
 
-    // 1tick毎のアニメーション
     function tick() {
-      // rollSpeedが0以下になったら終了
       if (rollSpeed < 0) {
         finishRoll();
         return;
       }
 
-      // 各サイコロごとに累積値の更新と判定を行う
       diceStates.forEach((state, index) => {
-        // サイコロごとに少しだけ乱数要素を乗せて、タイミングに少し揺らぎを与える
         const individualOffset = 1 + (index * 0.03); 
         
-        // 個別揺らぎをrollSpeedに掛け合わせた状態で加算
         state.t += Math.max(0, Math.pow((rollSpeed * individualOffset) / border, easePower));
 
-        // 小数部分が整数値を超えたら出目を更新
         if (Math.floor(state.t) > Math.floor(state.bt)) {
           const currentVal = dice(state.data());
           state.element.textContent = currentVal;
 
-          // 数字が切り替わったタイミングで心地よいカチッ音を再生！
           playClickSound(index);
 
-          // 振動トリガーの調整
-          const maxAngle = 20; // ブレる最大角度
-          const progressRatio = rollSpeed / baseRollSpeed; // 1.0 -> 0.0
+          const maxAngle = 20; 
+          const progressRatio = rollSpeed / baseRollSpeed; 
           const currentAngle = maxAngle * progressRatio;
 
           const rotX = (Math.random() - 0.5) * currentAngle * 2;
@@ -1016,13 +948,11 @@
       requestAnimationFrame(tick);
     }
 
-    // ロール開始
     function startRoll() {
       if (isRolling) return;
 
       const isEventTurn = (currentTurn % eventInterval === 0);
 
-      // --- 追加：ロール開始時トリガーの処理 ---
       if (eventTrigger === "start" && isEventTurn) {
         isRolling = true;
         rollBtn.disabled = true;
@@ -1032,9 +962,9 @@
         
         setTimeout(() => {
           if (resetTurnOnEvent) {
-            currentTurn = 1; // リセット有効
+            currentTurn = 1; 
           } else {
-            currentTurn++; // リセット無効（ターン進行）
+            currentTurn++; 
           }
           updateTurnDisplay();
           rollBtn.disabled = false;
@@ -1042,16 +972,14 @@
           isRolling = false;
         }, 2500);
         
-        return; // ここで処理を終了し、サイコロは振らない
+        return; 
       }
-      // ----------------------------------------
 
       isRolling = true;
       rollBtn.disabled = true;
       rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
       statusText.textContent = "超高速ローリング中...";
 
-      // すべてのタイマーと累積変数、サイコロのエフェクトをリセット
       diceStates.forEach((state, index) => {
         state.t = 0;
         state.bt = 0;
@@ -1062,7 +990,6 @@
       requestAnimationFrame(tick);
     }
 
-    // パーティクルを撒き散らす演出
     function createParticles() {
       particleContainer.innerHTML = '';
       const count = 40; 
@@ -1090,7 +1017,6 @@
       }
     }
 
-    // 画面中央にド派手なイベント発生演出を出す関数
     function triggerEventAnimation() {
       eventOverlay.classList.remove('hidden');
       eventOverlay.classList.add('flex');
@@ -1109,7 +1035,6 @@
       }, 2500);
     }
 
-    // ロール完了（最終確定）
     function finishRoll() {
       diceStates.forEach((state, index) => {
         const finalVal = dice(state.data());
@@ -1117,7 +1042,6 @@
         applyDiceEffect(index, finalVal, state.data()); 
       });
 
-      // ピタッと止まった時の気持ちいい弾む演出
       containers.forEach(container => {
         container.animate([
           { transform: 'scale(1)' },
@@ -1135,15 +1059,14 @@
 
       const isEventTurn = (currentTurn % eventInterval === 0);
 
-      // --- 追加・変更：ロール終了時トリガーの処理 ---
       if (eventTrigger === "end" && isEventTurn) {
         setTimeout(() => {
           triggerEventAnimation();
           setTimeout(() => {
             if (resetTurnOnEvent) {
-              currentTurn = 1; // リセット有効
+              currentTurn = 1; 
             } else {
-              currentTurn++; // リセット無効（ターン進行）
+              currentTurn++; 
             }
             updateTurnDisplay();
             rollBtn.disabled = false;
@@ -1160,7 +1083,6 @@
       }
     }
 
-    // ターン数のリセット
     function resetTurn() {
       if (isRolling) return;
       currentTurn = 1;
@@ -1173,7 +1095,6 @@
       }, 2000);
     }
 
-    // イベントリスナーUI連動追加分
     inputDiceGapRange.addEventListener('input', (e) => {
       inputDiceGapNumber.value = e.target.value;
       gapValueDisplay.textContent = e.target.value;
@@ -1189,7 +1110,6 @@
     rollBtn.addEventListener('click', startRoll);
     resetTurnBtn.addEventListener('click', resetTurn);
 
-    // モーダル
     settingsBtn.addEventListener('click', () => {
       if (isRolling) return;
       syncSettingsToForm();
@@ -1228,7 +1148,6 @@
       inputTurn.value = 1;
       inputEventInterval.value = 5;
 
-      // 追加設定の初期化
       inputEventTrigger.value = "end";
       checkResetTurnOnEvent.checked = true;
       textResetTurnOnEvent.textContent = "有効";
@@ -1253,9 +1172,8 @@
       applyDiceGap();
     });
 
-    // 初期起動時のデータ適用
     syncSettingsToForm();
-    applyDiceGap(); // 初期ギャップの適用
+    applyDiceGap(); 
     updateBackground();
     resetDiceDisplay();
     updateTurnDisplay();
