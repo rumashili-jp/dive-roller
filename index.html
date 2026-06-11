@@ -440,6 +440,24 @@
               <input type="number" id="inputEventDuration" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white focus:outline-none focus:border-indigo-500 text-xs" min="0.5" step="0.5" value="2.5">
             </div>
           </div>
+          <!-- 追加：イベント効果音設定 -->
+          <div class="grid grid-cols-1 gap-3 border-t border-slate-700/50 pt-2">
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-400 mb-1">イベント効果音パス (空欄で無音)</label>
+              <input type="text" id="inputEventAudioUrl" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white focus:outline-none focus:border-indigo-500 text-xs" placeholder="./event-sound.mp3">
+            </div>
+            <div class="space-y-1">
+              <div class="flex justify-between items-center">
+                <span class="text-[10px] font-semibold text-slate-400 mb-1">イベント効果音の音量</span>
+                <span id="eventVolumeValue" class="text-[10px] font-mono font-bold text-indigo-400">50</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-volume-off text-[10px] text-slate-500"></i>
+                <input type="range" id="inputEventVolume" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" min="0" max="100" value="50">
+                <i class="fa-solid fa-volume-high text-[10px] text-slate-500"></i>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- サイコロの配置（幅）設定 -->
@@ -490,8 +508,8 @@
     
     // ターン管理のデータと追加設定データ
     let currentTurn = 1;
-    let eventInterval = 6;  
-    let eventTrigger = "end"; 
+    let eventInterval = 5;  
+    let eventTrigger = "start"; 
     let resetTurnOnEvent = false; 
     let diceGap = 160; 
     let eventEndType = "click"; // "timer" (タイマー) または "click" (クリック/タップ)
@@ -504,6 +522,11 @@
 
     // 音量管理 (0 ~ 100, 初期値20)
     let sfxVolume = 20;
+    
+    // イベント効果音管理
+    let eventAudioUrl = "";
+    let eventAudioVolume = 50;
+    let currentEventAudio = null;
 
     // Web Audio API
     let audioCtx = null;
@@ -679,6 +702,10 @@
     const inputVolume = document.getElementById('inputVolume');
     const volumeValue = document.getElementById('volumeValue');
 
+    const inputEventAudioUrl = document.getElementById('inputEventAudioUrl');
+    const inputEventVolume = document.getElementById('inputEventVolume');
+    const eventVolumeValue = document.getElementById('eventVolumeValue');
+
     function syncSettingsToForm() {
       inputC1.value = c1.join(',');
       inputC2.value = c2.join(',');
@@ -714,6 +741,10 @@
 
       inputVolume.value = sfxVolume;
       volumeValue.textContent = sfxVolume;
+
+      inputEventAudioUrl.value = eventAudioUrl;
+      inputEventVolume.value = eventAudioVolume;
+      eventVolumeValue.textContent = eventAudioVolume;
     }
 
     function applyDiceGap() {
@@ -736,6 +767,11 @@
     inputVolume.addEventListener('input', (e) => {
       volumeValue.textContent = e.target.value;
       sfxVolume = Number(e.target.value);
+    });
+
+    inputEventVolume.addEventListener('input', (e) => {
+      eventVolumeValue.textContent = e.target.value;
+      eventAudioVolume = Number(e.target.value);
     });
 
     function updateTurnDisplay() {
@@ -964,6 +1000,9 @@
       enableBorderColor = checkBorderColor.checked;
       sfxVolume = Number(inputVolume.value);
 
+      eventAudioUrl = inputEventAudioUrl.value;
+      eventAudioVolume = Number(inputEventVolume.value);
+
       updateBackground();
       updateTurnDisplay();
       resetDiceDisplay();
@@ -1120,10 +1159,24 @@
 
       createParticles();
 
+      // イベント効果音の再生
+      if (eventAudioUrl && eventAudioUrl.trim() !== "") {
+        currentEventAudio = new Audio(eventAudioUrl);
+        currentEventAudio.volume = eventAudioVolume / 100;
+        currentEventAudio.play().catch(e => console.debug("Event audio play failed:", e));
+      }
+
       let hasDismissed = false;
       const dismiss = () => {
         if (hasDismissed) return;
         hasDismissed = true;
+
+        // イベント効果音の停止
+        if (currentEventAudio) {
+          currentEventAudio.pause();
+          currentEventAudio.currentTime = 0;
+          currentEventAudio = null;
+        }
 
         // イベントリスナーを安全に解除
         eventOverlay.removeEventListener('click', dismiss);
@@ -1303,10 +1356,16 @@
       inputVolume.value = 20;
       volumeValue.textContent = "20";
 
+      inputEventAudioUrl.value = "";
+      inputEventVolume.value = 50;
+      eventVolumeValue.textContent = "50";
+
       enableShockwave = true;
       enableAura = true;
       enableBorderColor = true;
       sfxVolume = 20;
+      eventAudioUrl = "";
+      eventAudioVolume = 50;
       
       eventTrigger = "end";
       resetTurnOnEvent = true;
