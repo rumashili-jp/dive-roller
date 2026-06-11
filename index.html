@@ -486,10 +486,10 @@
     
     // ターン管理のデータと追加設定データ
     let currentTurn = 1;
-    let eventInterval = 5;  
-    let eventTrigger = "start"; 
-    let resetTurnOnEvent = false; 
-    let diceGap = 160; 
+    let eventInterval = 6;
+    let eventTrigger = "end";
+    let resetTurnOnEvent = false;
+    let diceGap = 160;
     let eventEndType = "click"; // "timer" (タイマー) または "click" (クリック/タップ)
     let eventDuration = 2.5;    // イベントの表示秒数
 
@@ -498,8 +498,8 @@
     let enableAura = true;
     let enableBorderColor = true;
 
-    // 音量管理 (0 ~ 100, 初期値20)
-    let sfxVolume = 20;
+    // 音量管理 (0 ~ 100, 初期値30)
+    let sfxVolume = 30;
 
     // Web Audio API
     let audioCtx = null;
@@ -1139,45 +1139,44 @@
     }
 
     function finishRoll() {
-      diceStates.forEach((state, index) => {
-        const finalVal = dice(state.data());
-        state.element.textContent = finalVal;
-        applyDiceEffect(index, finalVal, state.data()); 
-      });
-
-      containers.forEach(container => {
-        container.animate([
-          { transform: 'scale(1)' },
-          { transform: 'scale(1.25)', offset: 0.15 },
-          { transform: 'scale(0.93)', offset: 0.45 },
-          { transform: 'scale(1.02)', offset: 0.75 },
-          { transform: 'scale(1)' }
-        ], {
-          duration: 450,
-          easing: 'ease-out'
-        });
-      });
-
       statusText.textContent = ""; 
 
       const isEventTurn = (currentTurn % eventInterval === 0);
 
       if (eventTrigger === "end" && isEventTurn) {
-        setTimeout(() => {
-          // 終了タイミング設定を反映したアニメーションをトリガー
-          triggerEventAnimation(() => {
-            if (resetTurnOnEvent) {
-              currentTurn = 1; 
-            } else {
-              currentTurn++; 
-            }
-            updateTurnDisplay();
-            rollBtn.disabled = false;
-            rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            isRolling = false;
-          });
-        }, 300); 
+        // 確定処理・エフェクトをスキップし、即座にイベントアニメーションをトリガー
+        triggerEventAnimation(() => {
+          if (resetTurnOnEvent) {
+            currentTurn = 1; 
+          } else {
+            currentTurn++; 
+          }
+          updateTurnDisplay();
+          rollBtn.disabled = false;
+          rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          isRolling = false;
+        });
       } else {
+        // 通常の確定処理とエフェクト
+        diceStates.forEach((state, index) => {
+          const finalVal = dice(state.data());
+          state.element.textContent = finalVal;
+          applyDiceEffect(index, finalVal, state.data()); 
+        });
+
+        containers.forEach(container => {
+          container.animate([
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.25)', offset: 0.15 },
+            { transform: 'scale(0.93)', offset: 0.45 },
+            { transform: 'scale(1.02)', offset: 0.75 },
+            { transform: 'scale(1)' }
+          ], {
+            duration: 450,
+            easing: 'ease-out'
+          });
+        });
+
         currentTurn++;
         updateTurnDisplay();
         rollBtn.disabled = false;
