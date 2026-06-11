@@ -213,6 +213,10 @@
         <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Turn</span>
         <span id="turnCounter" class="text-lg font-black text-slate-800 dark:text-slate-100 min-w-[20px] text-center">1</span>
       </div>
+      <!-- 全画面ボタン -->
+      <button id="fullscreenBtn" class="p-2 rounded-full text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200 focus:outline-none" aria-label="全画面表示">
+        <i id="fullscreenIcon" class="fa-solid fa-expand text-xl"></i>
+      </button>
       <!-- 設定ボタン -->
       <button id="settingsBtn" class="p-2 rounded-full text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200 focus:outline-none" aria-label="設定を開く">
         <i class="fa-solid fa-gear text-xl"></i>
@@ -486,10 +490,10 @@
     
     // ターン管理のデータと追加設定データ
     let currentTurn = 1;
-    let eventInterval = 6;
-    let eventTrigger = "end";
-    let resetTurnOnEvent = false;
-    let diceGap = 160;
+    let eventInterval = 6;  
+    let eventTrigger = "end"; 
+    let resetTurnOnEvent = false; 
+    let diceGap = 160; 
     let eventEndType = "click"; // "timer" (タイマー) または "click" (クリック/タップ)
     let eventDuration = 2.5;    // イベントの表示秒数
 
@@ -498,8 +502,8 @@
     let enableAura = true;
     let enableBorderColor = true;
 
-    // 音量管理 (0 ~ 100, 初期値30)
-    let sfxVolume = 30;
+    // 音量管理 (0 ~ 100, 初期値20)
+    let sfxVolume = 20;
 
     // Web Audio API
     let audioCtx = null;
@@ -617,6 +621,8 @@
     const rollBtn = document.getElementById('rollBtn');
     const resetTurnBtn = document.getElementById('resetTurnBtn');
     const settingsBtn = document.getElementById('settingsBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const fullscreenIcon = document.getElementById('fullscreenIcon');
     const settingsModal = document.getElementById('settingsModal');
     const closeSettingsBtn = document.getElementById('closeSettingsBtn');
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
@@ -763,6 +769,8 @@
 
         settingsBtn.classList.remove('text-slate-700', 'hover:bg-slate-100', 'hover:text-slate-900');
         settingsBtn.classList.add('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
+        fullscreenBtn.classList.remove('text-slate-700', 'hover:bg-slate-100', 'hover:text-slate-900');
+        fullscreenBtn.classList.add('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
 
         turnContainer.classList.remove('bg-slate-100', 'border-slate-200');
         turnContainer.classList.add('bg-slate-900/80', 'border-slate-800');
@@ -790,6 +798,8 @@
 
         settingsBtn.classList.remove('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
         settingsBtn.classList.add('text-slate-700', 'hover:bg-slate-100', 'hover:text-slate-900');
+        fullscreenBtn.classList.remove('text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
+        fullscreenBtn.classList.add('text-slate-700', 'hover:bg-slate-100', 'hover:text-slate-900');
 
         turnContainer.classList.remove('bg-slate-900/80', 'border-slate-800');
         turnContainer.classList.add('bg-slate-100', 'border-slate-200');
@@ -1211,6 +1221,28 @@
 
     rollBtn.addEventListener('click', startRoll);
     resetTurnBtn.addEventListener('click', resetTurn);
+
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.debug(`Error attempting to enable full-screen mode: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement) {
+        fullscreenIcon.classList.remove('fa-expand');
+        fullscreenIcon.classList.add('fa-compress');
+      } else {
+        fullscreenIcon.classList.remove('fa-compress');
+        fullscreenIcon.classList.add('fa-expand');
+      }
+    });
 
     settingsBtn.addEventListener('click', () => {
       if (isRolling) return;
