@@ -268,8 +268,8 @@
 
     </div>
 
-    <!-- ロールボタンとリセットボタン -->
-    <div class="flex flex-col items-center gap-4">
+    <!-- ロールボタンとリセットボタン（画面右寄せ） -->
+    <div class="w-full max-w-4xl px-4 flex flex-col items-end gap-3 mt-4">
       <div class="flex items-center gap-3">
         <button id="rollBtn" class="relative group px-12 py-5 bg-slate-900 rounded-2xl font-extrabold text-xl tracking-widest text-white shadow-xl hover:bg-slate-850 active:scale-95 transition-all duration-150 overflow-hidden">
           <span class="relative z-10 flex items-center gap-2">
@@ -283,7 +283,7 @@
           <i class="fa-solid fa-rotate-left text-lg"></i>
         </button>
       </div>
-      <div id="statusText" class="text-xs text-slate-500 h-4">ボタンを押してサイコロを振ろう</div>
+      <div id="statusText" class="text-xs text-slate-500 h-4 mr-2">ボタンを押してサイコロを振ろう</div>
     </div>
   </main>
 
@@ -1076,6 +1076,12 @@
         rollBtn.disabled = true;
         rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
         
+        // ★イベント発生時はサイコロの数字を隠して通常状態にリセット
+        diceStates.forEach((state, index) => {
+          state.element.textContent = ""; 
+          resetSingleDiceEffect(index);
+        });
+
         // 終了タイミング設定を反映したアニメーションをトリガー
         triggerEventAnimation(() => {
           if (resetTurnOnEvent) {
@@ -1207,7 +1213,12 @@
       const isEventTurn = (currentTurn % eventInterval === 0);
 
       if (eventTrigger === "end" && isEventTurn) {
-        // 確定処理・エフェクトをスキップし、即座にイベントアニメーションをトリガー
+        // ★イベント発生時は確定処理・エフェクトをスキップし、サイコロを空白にする
+        diceStates.forEach((state, index) => {
+          state.element.textContent = ""; 
+          resetSingleDiceEffect(index);
+        });
+
         triggerEventAnimation(() => {
           if (resetTurnOnEvent) {
             currentTurn = 1; 
