@@ -287,6 +287,11 @@
     </div>
   </main>
 
+  <!-- カスタムテキスト表示エリア (フッターの上) -->
+  <div class="w-full max-w-4xl mx-auto px-6 pb-4 text-center z-10 relative">
+    <p id="customFooterText" class="text-sm font-semibold text-slate-600 transition-colors duration-300 whitespace-pre-wrap hidden leading-relaxed"></p>
+  </div>
+
   <!-- フッター -->
   <footer class="w-full text-center py-4 text-xs text-slate-500 border-t border-slate-200 transition-colors duration-300">
     &copy; 2026 Dice Roller Simulation.
@@ -346,6 +351,15 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">背景画像のURL/パス (空欄で白背景)</label>
           <input type="text" id="inputBgUrl" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 text-sm" placeholder="https://example.com/image.png">
+        </div>
+
+        <!-- カスタムテキスト設定 -->
+        <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-750 space-y-3">
+          <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest border-b border-slate-750 pb-1.5"><i class="fa-solid fa-font text-indigo-400"></i> カスタムテキスト設定</h3>
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-400 mb-1">フッター上部の表示テキスト (空欄で非表示)</label>
+            <textarea id="inputCustomText" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 text-sm h-20 resize-none" placeholder="ここにメッセージやルールを入力できるよ..."></textarea>
+          </div>
         </div>
 
         <!-- ON/OFF エフェクト設定スイッチトグル & 音量スライダー -->
@@ -505,6 +519,7 @@
     let border = 90;        
     let easePower = 3;      
     let bgImageUrl = "./IMG_3640.png";    
+    let customText = "";    // カスタムテキスト用
     
     // ターン管理のデータと追加設定データ
     let currentTurn = 1;
@@ -679,6 +694,8 @@
     const inputC2 = document.getElementById('inputC2');
     const inputC3 = document.getElementById('inputC3');
     const inputBgUrl = document.getElementById('inputBgUrl');
+    const inputCustomText = document.getElementById('inputCustomText');
+    const customFooterText = document.getElementById('customFooterText');
     const inputSpeed = document.getElementById('inputSpeed');
     const inputBorder = document.getElementById('inputBorder');
     const inputPower = document.getElementById('inputPower');
@@ -711,6 +728,7 @@
       inputC2.value = c2.join(',');
       inputC3.value = c3.join(',');
       inputBgUrl.value = bgImageUrl;
+      inputCustomText.value = customText;
       inputSpeed.value = baseRollSpeed;
       inputBorder.value = border;
       inputPower.value = easePower;
@@ -750,6 +768,16 @@
     function applyDiceGap() {
       if (diceGrid) {
         diceGrid.style.gap = `${diceGap}px`;
+      }
+    }
+
+    function updateCustomTextDisplay() {
+      if (customText.trim() !== "") {
+        customFooterText.textContent = customText;
+        customFooterText.classList.remove('hidden');
+      } else {
+        customFooterText.textContent = "";
+        customFooterText.classList.add('hidden');
       }
     }
 
@@ -818,6 +846,9 @@
 
         footer.classList.remove('border-slate-200', 'text-slate-500');
         footer.classList.add('border-slate-800', 'text-slate-400');
+
+        customFooterText.classList.remove('text-slate-600');
+        customFooterText.classList.add('text-slate-300');
       } else {
         document.body.style.backgroundColor = "#ffffff";
         document.body.style.backgroundImage = "none";
@@ -847,6 +878,9 @@
 
         footer.classList.remove('border-slate-800', 'text-slate-400');
         footer.classList.add('border-slate-200', 'text-slate-500');
+
+        customFooterText.classList.remove('text-slate-300');
+        customFooterText.classList.add('text-slate-600');
       }
     }
 
@@ -980,6 +1014,7 @@
       c2 = parseDiceInput(inputC2.value);
       c3 = parseDiceInput(inputC3.value);
       bgImageUrl = inputBgUrl.value;
+      customText = inputCustomText.value;
       baseRollSpeed = Number(inputSpeed.value) || 120;
       border = Number(inputBorder.value) || 90;
       easePower = Number(inputPower.value) || 3;
@@ -1004,6 +1039,7 @@
       eventAudioVolume = Number(inputEventVolume.value);
 
       updateBackground();
+      updateCustomTextDisplay();
       updateTurnDisplay();
       resetDiceDisplay();
     }
@@ -1340,6 +1376,8 @@
       inputC2.value = "1,2,3,4,5,6";
       inputC3.value = "1,2,3,3,3,9";
       inputBgUrl.value = "./IMG_3640.png";
+      inputCustomText.value = "";
+      customText = "";
       inputSpeed.value = 120;
       inputBorder.value = 90;
       inputPower.value = 3;
@@ -1382,11 +1420,13 @@
       resetTurnOnEvent = true;
       diceGap = 160;
       applyDiceGap();
+      updateCustomTextDisplay();
     });
 
     syncSettingsToForm();
     applyDiceGap(); 
     updateBackground();
+    updateCustomTextDisplay();
     resetDiceDisplay();
     updateTurnDisplay();
   </script>
